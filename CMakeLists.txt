@@ -27,14 +27,16 @@ endif()
 
 # Setup commonlibsse-ng
 set(BUILD_TESTS OFF)
-add_subdirectory("extern/commonlibsse" commonlibsse EXCLUDE_FROM_ALL)
+add_subdirectory("extern/commonlibsse" commonlibsse)
 
 set(headers
-	include/PCH.h
+	"include/PCH.h"
+  "include/BSLSMLandscapeExtended.hpp"
 )
 
 set(sources
   "src/main.cpp"
+  "src/BSLSMLandscapeExtended.cpp"
 )
 
 add_library("${PROJECT_NAME}" SHARED ${sources} ${headers})
