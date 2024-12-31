@@ -49,6 +49,7 @@ struct BSLightingShader_SetupMaterial
 
     // get renderer and shadow state
     auto shadowState = RE::BSGraphics::RendererShadowState::GetSingleton();
+    auto runtimeState = RE::BSGraphics::State::GetSingleton()->GetRuntimeData();
     auto renderer = RE::BSGraphics::Renderer::GetSingleton();
 
     // get material
@@ -56,6 +57,38 @@ struct BSLightingShader_SetupMaterial
 
     static constexpr size_t NormalStartIndex = 7;
     static constexpr size_t ExtendedStartIndex = 16;
+
+    for (uint32_t textureI = 0; textureI < 6; ++textureI) {
+      // Diffuse
+      if (materialBase->landscapeDiffuseTex[textureI] != nullptr && materialBase->landscapeDiffuseTex[textureI] != runtimeState.defaultTextureBlack) {
+        shadowState->SetPSTexture(textureI, materialBase->landscapeDiffuseTex[textureI]->rendererTexture);
+        shadowState->SetPSTextureAddressMode(textureI, RE::BSGraphics::TextureAddressMode::kWrapSWrapT);
+        shadowState->SetPSTextureFilterMode(textureI, RE::BSGraphics::TextureFilterMode::kAnisotropic);
+      }
+      // Normal
+      if (materialBase->landscapeNormalTex[textureI] != nullptr && materialBase->landscapeNormalTex[textureI] != runtimeState.defaultTextureNormalMap) {
+        const uint32_t normalIndex = NormalStartIndex + textureI;
+        shadowState->SetPSTexture(normalIndex, materialBase->landscapeNormalTex[textureI]->rendererTexture);
+        shadowState->SetPSTextureAddressMode(NormalStartIndex, RE::BSGraphics::TextureAddressMode::kWrapSWrapT);
+        shadowState->SetPSTextureFilterMode(NormalStartIndex, RE::BSGraphics::TextureFilterMode::kAnisotropic);
+      }
+      // Environment Mask
+      if (materialBase->landscapeEnvMaskTex[textureI] != nullptr && materialBase->landscapeEnvMaskTex[textureI] != runtimeState.defaultTextureBlack && materialBase->landscapeEnvMaskTex[textureI] != runtimeState.defaultTextureNormalMap) {
+        const uint32_t envMaskIndex = ExtendedStartIndex + textureI;
+        shadowState->SetPSTexture(envMaskIndex, materialBase->landscapeEnvMaskTex[textureI]->rendererTexture);
+
+        // Environment
+        if (materialBase->landscapeEnvTex[textureI] != nullptr && materialBase->landscapeEnvTex[textureI] != runtimeState.defaultReflectionCubeMap && materialBase->landscapeEnvTex[textureI] != runtimeState.defaultTextureNormalMap) {
+          const uint32_t envIndex = ExtendedStartIndex + 6 + textureI;
+          shadowState->SetPSTexture(envIndex, materialBase->landscapeEnvTex[textureI]->rendererTexture);
+        }
+      }
+      else if (materialBase->landscapeHeightTex[textureI] != nullptr && materialBase->landscapeHeightTex[textureI] != runtimeState.defaultHeightMap && materialBase->landscapeHeightTex[textureI] != runtimeState.defaultTextureNormalMap) {
+        // Height map
+        const uint32_t heightIndex = ExtendedStartIndex + textureI;
+        shadowState->SetPSTexture(heightIndex, materialBase->landscapeHeightTex[textureI]->rendererTexture);
+      }
+    }
 
     // Assign textures to slots
     if (materialBase->terrainOverlayTexture != nullptr) {
@@ -68,63 +101,6 @@ struct BSLightingShader_SetupMaterial
       shadowState->SetPSTexture(15, materialBase->terrainNoiseTexture->rendererTexture);
       shadowState->SetPSTextureAddressMode(15, RE::BSGraphics::TextureAddressMode::kWrapSWrapT);
       shadowState->SetPSTextureFilterMode(15, RE::BSGraphics::TextureFilterMode::kBilinear);
-    }
-
-    for (uint32_t textureI = 0; textureI < 6; ++textureI) {
-      // Diffuse
-      if (materialBase->landscapeDiffuseTex[textureI] != nullptr) {
-        shadowState->SetPSTexture(textureI, materialBase->landscapeDiffuseTex[textureI]->rendererTexture);
-        shadowState->SetPSTextureAddressMode(textureI, RE::BSGraphics::TextureAddressMode::kWrapSWrapT);
-        shadowState->SetPSTextureFilterMode(textureI, RE::BSGraphics::TextureFilterMode::kAnisotropic);
-      }
-      // Normal
-      if (materialBase->landscapeNormalTex[textureI] != nullptr) {
-        const uint32_t normalIndex = NormalStartIndex + textureI;
-        shadowState->SetPSTexture(NormalStartIndex, materialBase->landscapeNormalTex[textureI]->rendererTexture);
-        shadowState->SetPSTextureAddressMode(NormalStartIndex, RE::BSGraphics::TextureAddressMode::kWrapSWrapT);
-        shadowState->SetPSTextureFilterMode(NormalStartIndex, RE::BSGraphics::TextureFilterMode::kAnisotropic);
-      }
-      // Glow
-      if (materialBase->landscapeGlowTex[textureI] != nullptr) {
-        shadowState->SetPSTexture(ExtendedStartIndex, materialBase->landscapeGlowTex[textureI]->rendererTexture);
-        shadowState->SetPSTextureAddressMode(ExtendedStartIndex, RE::BSGraphics::TextureAddressMode::kWrapSWrapT);
-        shadowState->SetPSTextureFilterMode(ExtendedStartIndex, RE::BSGraphics::TextureFilterMode::kAnisotropic);
-      }
-      // Height
-      if (materialBase->landscapeHeightTex[textureI] != nullptr) {
-        const uint32_t heightIndex = ExtendedStartIndex + 6;
-        shadowState->SetPSTexture(heightIndex, materialBase->landscapeHeightTex[textureI]->rendererTexture);
-        shadowState->SetPSTextureAddressMode(heightIndex, RE::BSGraphics::TextureAddressMode::kWrapSWrapT);
-        shadowState->SetPSTextureFilterMode(heightIndex, RE::BSGraphics::TextureFilterMode::kAnisotropic);
-      }
-      // Environment
-      if (materialBase->landscapeEnvTex[textureI] != nullptr) {
-        const uint32_t envIndex = ExtendedStartIndex + 12;
-        shadowState->SetPSTexture(envIndex, materialBase->landscapeEnvTex[textureI]->rendererTexture);
-        shadowState->SetPSTextureAddressMode(envIndex, RE::BSGraphics::TextureAddressMode::kWrapSWrapT);
-        shadowState->SetPSTextureFilterMode(envIndex, RE::BSGraphics::TextureFilterMode::kAnisotropic);
-      }
-      // Environment Mask
-      if (materialBase->landscapeEnvMaskTex[textureI] != nullptr) {
-        const uint32_t envMaskIndex = ExtendedStartIndex + 18;
-        shadowState->SetPSTexture(envMaskIndex, materialBase->landscapeEnvMaskTex[textureI]->rendererTexture);
-        shadowState->SetPSTextureAddressMode(envMaskIndex, RE::BSGraphics::TextureAddressMode::kWrapSWrapT);
-        shadowState->SetPSTextureFilterMode(envMaskIndex, RE::BSGraphics::TextureFilterMode::kAnisotropic);
-      }
-      // Subsurface
-      if (materialBase->landscapeSubsurfaceTex[textureI] != nullptr) {
-        const uint32_t subsurfaceIndex = ExtendedStartIndex + 24;
-        shadowState->SetPSTexture(subsurfaceIndex, materialBase->landscapeSubsurfaceTex[textureI]->rendererTexture);
-        shadowState->SetPSTextureAddressMode(subsurfaceIndex, RE::BSGraphics::TextureAddressMode::kWrapSWrapT);
-        shadowState->SetPSTextureFilterMode(subsurfaceIndex, RE::BSGraphics::TextureFilterMode::kAnisotropic);
-      }
-      // Backlight
-      if (materialBase->landscapeBacklightTex[textureI] != nullptr) {
-        const uint32_t backlightIndex = ExtendedStartIndex + 30;
-        shadowState->SetPSTexture(backlightIndex, materialBase->landscapeBacklightTex[textureI]->rendererTexture);
-        shadowState->SetPSTextureAddressMode(backlightIndex, RE::BSGraphics::TextureAddressMode::kWrapSWrapT);
-        shadowState->SetPSTextureFilterMode(backlightIndex, RE::BSGraphics::TextureFilterMode::kAnisotropic);
-      }
     }
   };
 
@@ -149,28 +125,31 @@ struct TESObjectLAND_SetupMaterial
     static const bool bEnableLandFade = settings->GetSetting("bEnableLandFade:Display");
     static const bool bDrawLandShadows = settings->GetSetting("bDrawLandShadows:Display");
 
+    land->data.flags.set(static_cast<RE::OBJ_LAND::Flag>(8));
     for (uint32_t quadI = 0; quadI < 4; ++quadI) {
       auto shaderProperty = static_cast<RE::BSLightingShaderProperty*>(RE::MemoryManager::GetSingleton()->Allocate(REL::Module::IsVR() ? 0x178 : sizeof(RE::BSLightingShaderProperty), 0, false));
       shaderProperty->Ctor();
 
       // Create a new material
-      BSLSMLandscapeExtended srcMaterial;
-      shaderProperty->LinkMaterial(&srcMaterial, true);
+      {
+        BSLSMLandscapeExtended material;
+        shaderProperty->LinkMaterial(&material, true);
+      }
 
       // Get material after assigning it
       auto material = static_cast<BSLSMLandscapeExtended*>(shaderProperty->material);
       const auto& stateData = RE::BSGraphics::State::GetSingleton()->GetRuntimeData();
 
       // Set initial textures
-      for (uint32_t textureIndex = 0; textureIndex < 6; ++textureIndex) {
-        material->landscapeDiffuseTex[textureIndex] = stateData.defaultTextureBlack;
-        material->landscapeNormalTex[textureIndex] = stateData.defaultTextureNormalMap;
-        material->landscapeGlowTex[textureIndex] = stateData.defaultTextureBlack;
-        material->landscapeHeightTex[textureIndex] = stateData.defaultTextureBlack;
-        material->landscapeEnvTex[textureIndex] = stateData.defaultTextureBlack;
-        material->landscapeEnvMaskTex[textureIndex] = stateData.defaultTextureBlack;
-        material->landscapeSubsurfaceTex[textureIndex] = stateData.defaultTextureBlack;
-        material->landscapeBacklightTex[textureIndex] = stateData.defaultTextureBlack;
+      for (uint32_t textureI = 0; textureI < 6; ++textureI) {
+        material->landscapeDiffuseTex[textureI] = stateData.defaultTextureBlack;
+        material->landscapeNormalTex[textureI] = stateData.defaultTextureNormalMap;
+        material->landscapeGlowTex[textureI] = stateData.defaultTextureBlack;
+        material->landscapeHeightTex[textureI] = stateData.defaultHeightMap;
+        material->landscapeEnvTex[textureI] = stateData.defaultReflectionCubeMap;
+        material->landscapeEnvMaskTex[textureI] = stateData.defaultTextureBlack;
+        material->landscapeSubsurfaceTex[textureI] = stateData.defaultTextureBlack;
+        material->landscapeBacklightTex[textureI] = stateData.defaultTextureBlack;
       }
 
       // Create array of texture sets (6 tiles)
@@ -181,27 +160,49 @@ struct TESObjectLAND_SetupMaterial
       else {
         textureSets[0] = GetDefaultLandTexture();
       }
-      for (uint32_t textureI = 1; textureI < 6; ++textureI) {
+      for (uint32_t textureI = 0; textureI < 5; ++textureI) {
         if (auto landTexture = land->loadedData->quadTextures[quadI][textureI]) {
-          textureSets[textureI] = landTexture;
+          textureSets[textureI + 1] = landTexture;
+        }
+        else {
+          textureSets[textureI + 1] = nullptr;
         }
       }
 
       // Assign textures to material
       for (uint32_t textureI = 0; textureI < 6; ++textureI) {
-        auto& txSet = textureSets[textureI]->textureSet;
-        if (txSet == nullptr) {
+        if (textureSets[textureI] == nullptr || textureSets[textureI]->textureSet == nullptr) {
           continue;
         }
 
-        txSet->SetTexture(RE::BSTextureSet::Texture::kDiffuse, material->landscapeDiffuseTex[textureI]);
-        txSet->SetTexture(RE::BSTextureSet::Texture::kNormal, material->landscapeNormalTex[textureI]);
-        txSet->SetTexture(RE::BSTextureSet::Texture::kGlowMap, material->landscapeGlowTex[textureI]);
-        txSet->SetTexture(RE::BSTextureSet::Texture::kHeight, material->landscapeHeightTex[textureI]);
-        txSet->SetTexture(RE::BSTextureSet::Texture::kEnvironment, material->landscapeEnvTex[textureI]);
-        txSet->SetTexture(RE::BSTextureSet::Texture::kEnvironmentMask, material->landscapeEnvMaskTex[textureI]);
-        txSet->SetTexture(RE::BSTextureSet::Texture::kMultilayer, material->landscapeSubsurfaceTex[textureI]);
-        txSet->SetTexture(RE::BSTextureSet::Texture::kBacklightMask, material->landscapeBacklightTex[textureI]);
+        auto txSet = textureSets[textureI]->textureSet;
+        if (txSet->GetTexturePath(BSLSMLandscapeExtended::DiffuseTexture) != nullptr) {
+          txSet->SetTexture(BSLSMLandscapeExtended::DiffuseTexture, material->landscapeDiffuseTex[textureI]);
+        }
+        if (txSet->GetTexturePath(BSLSMLandscapeExtended::NormalTexture) != nullptr) {
+          txSet->SetTexture(BSLSMLandscapeExtended::NormalTexture, material->landscapeNormalTex[textureI]);
+        }
+        if (txSet->GetTexturePath(BSLSMLandscapeExtended::GlowTexture) != nullptr) {
+          txSet->SetTexture(BSLSMLandscapeExtended::GlowTexture, material->landscapeGlowTex[textureI]);
+        }
+        if (txSet->GetTexturePath(BSLSMLandscapeExtended::HeightTexture) != nullptr) {
+          txSet->SetTexture(BSLSMLandscapeExtended::HeightTexture, material->landscapeHeightTex[textureI]);
+        }
+        if (txSet->GetTexturePath(BSLSMLandscapeExtended::EnvTexture) != nullptr) {
+          txSet->SetTexture(BSLSMLandscapeExtended::EnvTexture, material->landscapeEnvTex[textureI]);
+        }
+        if (txSet->GetTexturePath(BSLSMLandscapeExtended::EnvMaskTexture) != nullptr) {
+          txSet->SetTexture(BSLSMLandscapeExtended::EnvMaskTexture, material->landscapeEnvMaskTex[textureI]);
+        }
+        if (txSet->GetTexturePath(BSLSMLandscapeExtended::SubsurfaceTexture) != nullptr) {
+          txSet->SetTexture(BSLSMLandscapeExtended::SubsurfaceTexture, material->landscapeSubsurfaceTex[textureI]);
+        }
+        if (txSet->GetTexturePath(BSLSMLandscapeExtended::BacklightTexture) != nullptr) {
+          txSet->SetTexture(BSLSMLandscapeExtended::BacklightTexture, material->landscapeBacklightTex[textureI]);
+        }
+
+        // Update numlandscape textures
+        material->numLandscapeTextures = std::max(material->numLandscapeTextures, textureI + 1);
       }
 
       // Other properties

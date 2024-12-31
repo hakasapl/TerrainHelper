@@ -1,5 +1,18 @@
 #include "BSLSMLandscapeExtended.hpp"
 
+BSLSMLandscapeExtended::BSLSMLandscapeExtended()
+{
+}
+
+BSLSMLandscapeExtended::~BSLSMLandscapeExtended()
+{
+}
+
+RE::BSShaderMaterial* BSLSMLandscapeExtended::Create()
+{
+  return new BSLSMLandscapeExtended();
+}
+
 void BSLSMLandscapeExtended::CopyMembers(RE::BSShaderMaterial* that)
 {
 	RE::BSLightingShaderMaterialBase::CopyMembers(that);
@@ -18,9 +31,52 @@ void BSLSMLandscapeExtended::CopyMembers(RE::BSShaderMaterial* that)
 	}
 }
 
+RE::BSLightingShaderMaterialBase::Feature BSLSMLandscapeExtended::GetFeature() const
+{
+  return RE::BSLightingShaderMaterialBase::Feature::kMultiTexLandLODBlend;
+}
+
+void BSLSMLandscapeExtended::ReceiveValuesFromRootMaterial(bool a_skinned, bool a_rimLighting, bool a_softLighting, bool a_backLighting, bool a_MSN)
+{
+  BSLightingShaderMaterialBase::ReceiveValuesFromRootMaterial(a_skinned, a_rimLighting, a_softLighting, a_backLighting, a_MSN);
+  const auto& stateData = RE::BSGraphics::State::GetSingleton()->GetRuntimeData();
+  if (terrainOverlayTexture == nullptr) {
+    terrainOverlayTexture = stateData.defaultTextureNormalMap;
+  }
+  if (terrainNoiseTexture == nullptr) {
+    terrainNoiseTexture = stateData.defaultTextureNormalMap;
+  }
+  for (uint32_t textureIndex = 0; textureIndex < numLandscapeTextures; ++textureIndex) {
+    if (landscapeDiffuseTex[textureIndex] == nullptr) {
+      landscapeDiffuseTex[textureIndex] = stateData.defaultTextureBlack;
+    }
+    if (landscapeNormalTex[textureIndex] == nullptr) {
+      landscapeNormalTex[textureIndex] = stateData.defaultTextureNormalMap;
+    }
+    if (landscapeGlowTex[textureIndex] == nullptr) {
+      landscapeGlowTex[textureIndex] = stateData.defaultTextureBlack;
+    }
+    if (landscapeHeightTex[textureIndex] == nullptr) {
+      landscapeHeightTex[textureIndex] = stateData.defaultTextureBlack;
+    }
+    if (landscapeEnvTex[textureIndex] == nullptr) {
+      landscapeEnvTex[textureIndex] = stateData.defaultTextureBlack;
+    }
+    if (landscapeEnvMaskTex[textureIndex] == nullptr) {
+      landscapeEnvMaskTex[textureIndex] = stateData.defaultTextureBlack;
+    }
+    if (landscapeSubsurfaceTex[textureIndex] == nullptr) {
+      landscapeSubsurfaceTex[textureIndex] = stateData.defaultTextureBlack;
+    }
+    if (landscapeBacklightTex[textureIndex] == nullptr) {
+      landscapeBacklightTex[textureIndex] = stateData.defaultTextureBlack;
+    }
+  }
+}
+
 void BSLSMLandscapeExtended::ClearTextures()
 {
-	BSLightingShaderMaterialLandscape::ClearTextures();
+	RE::BSLightingShaderMaterialBase::ClearTextures();
 	for (auto& texture : landscapeDiffuseTex) {
     texture.reset();
   }
@@ -50,7 +106,7 @@ void BSLSMLandscapeExtended::ClearTextures()
 uint32_t BSLSMLandscapeExtended::GetTextures(RE::NiSourceTexture** textures)
 {
   uint32_t numTextures = 0;
-  for (uint32_t textureIndex = 0; textureIndex < 6; ++textureIndex) {
+  for (uint32_t textureIndex = 0; textureIndex < numLandscapeTextures; ++textureIndex) {
     if (landscapeDiffuseTex[textureIndex]) {
       textures[numTextures++] = landscapeDiffuseTex[textureIndex].get();
     }
@@ -75,6 +131,12 @@ uint32_t BSLSMLandscapeExtended::GetTextures(RE::NiSourceTexture** textures)
     if (landscapeBacklightTex[textureIndex]) {
       textures[numTextures++] = landscapeBacklightTex[textureIndex].get();
     }
+  }
+  if (terrainOverlayTexture) {
+    textures[numTextures++] = terrainOverlayTexture.get();
+  }
+  if (terrainNoiseTexture) {
+    textures[numTextures++] = terrainNoiseTexture.get();
   }
   return numTextures;
 }
