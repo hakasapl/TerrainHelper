@@ -26,14 +26,11 @@ using namespace std;
 void SetupLog() {
   auto logsFolder = SKSE::log::log_directory();
   if (!logsFolder) {
-    SKSE::stl::report_and_fail(
-      "SKSE log_directory not provided, logs disabled.");
+    SKSE::stl::report_and_fail("SKSE log_directory not provided, logs disabled.");
   }
   auto logFilePath = *logsFolder / "skyrimterrainslotunlocker.log";
-  auto fileLoggerPtr = std::make_shared<spdlog::sinks::basic_file_sink_mt>(
-    logFilePath.string(), true);
-  auto loggerPtr =
-    std::make_shared<spdlog::logger>("log", std::move(fileLoggerPtr));
+  auto fileLoggerPtr = std::make_shared<spdlog::sinks::basic_file_sink_mt>(logFilePath.string(), true);
+  auto loggerPtr = std::make_shared<spdlog::logger>("log", std::move(fileLoggerPtr));
   spdlog::set_default_logger(std::move(loggerPtr));
   spdlog::set_level(spdlog::level::trace);
   spdlog::flush_on(spdlog::level::trace);
@@ -46,7 +43,7 @@ struct BSLightingShader_SetupMaterial
     // get material
     auto materialBase = dynamic_cast<const BSLSMLandscapeExtended*>(material);
     if (materialBase == nullptr) {
-      // Not our material
+      // Not our material, run the native function
       return func(shader, material);
     }
 
@@ -56,47 +53,52 @@ struct BSLightingShader_SetupMaterial
 
     RE::BSGraphics::Renderer::PrepareVSConstantGroup(RE::BSGraphics::ConstantGroupLevel::PerMaterial);
     RE::BSGraphics::Renderer::PreparePSConstantGroup(RE::BSGraphics::ConstantGroupLevel::PerMaterial);
-    //const auto& lightingPSConstants = RE::ShaderConstants::LightingPS::Get();
 
     static constexpr size_t NormalStartIndex = 7;
     static constexpr size_t ExtendedStartIndex = 16;
 
     for (uint32_t textureI = 0; textureI < 6; ++textureI) {
       // Diffuse
-      if (materialBase->landscapeDiffuseTex[textureI] != nullptr && materialBase->landscapeDiffuseTex[textureI] != runtimeState.defaultTextureBlack) {
+      if (materialBase->landscapeDiffuseTex[textureI] != nullptr) {
         shadowState->SetPSTexture(textureI, materialBase->landscapeDiffuseTex[textureI]->rendererTexture);
         shadowState->SetPSTextureAddressMode(textureI, RE::BSGraphics::TextureAddressMode::kWrapSWrapT);
         shadowState->SetPSTextureFilterMode(textureI, RE::BSGraphics::TextureFilterMode::kAnisotropic);
+      } else {
+        shadowState->SetPSTexture(textureI, runtimeState.defaultTextureBlack->rendererTexture);
       }
+
       // Normal
-      if (materialBase->landscapeNormalTex[textureI] != nullptr && materialBase->landscapeNormalTex[textureI] != runtimeState.defaultTextureNormalMap) {
-        const uint32_t normalIndex = NormalStartIndex + textureI;
+      const uint32_t normalIndex = NormalStartIndex + textureI;
+      if (materialBase->landscapeNormalTex[textureI] != nullptr) {
         shadowState->SetPSTexture(normalIndex, materialBase->landscapeNormalTex[textureI]->rendererTexture);
         shadowState->SetPSTextureAddressMode(NormalStartIndex, RE::BSGraphics::TextureAddressMode::kWrapSWrapT);
         shadowState->SetPSTextureFilterMode(NormalStartIndex, RE::BSGraphics::TextureFilterMode::kAnisotropic);
+      } else {
+        shadowState->SetPSTexture(NormalStartIndex + textureI, runtimeState.defaultTextureNormalMap->rendererTexture);
       }
 
       // Extended Slots
-      /*if (materialBase->landscapeEnvMaskTex[textureI] != nullptr &&
-          materialBase->landscapeEnvMaskTex[textureI] != runtimeState.defaultTextureBlack &&
-          materialBase->landscapeEnvMaskTex[textureI] != runtimeState.defaultTextureNormalMap) {
+      const uint32_t extendedIndex = ExtendedStartIndex + textureI;
+      if (materialBase->landscapeEnvMaskTex[textureI] != nullptr) {
         // Has an Environment Mask
-        const uint32_t envMaskIndex = ExtendedStartIndex + textureI;
-        shadowState->SetPSTexture(envMaskIndex, materialBase->landscapeEnvMaskTex[textureI]->rendererTexture);
-
-        // Check if Cubemap exists
-        if (materialBase->landscapeEnvTex[textureI] != nullptr && materialBase->landscapeEnvTex[textureI] != runtimeState.defaultReflectionCubeMap && materialBase->landscapeEnvTex[textureI] != runtimeState.defaultTextureNormalMap) {
-          const uint32_t envIndex = ExtendedStartIndex + 6 + textureI;
-          shadowState->SetPSTexture(envIndex, materialBase->landscapeEnvTex[textureI]->rendererTexture);
-        }
+        shadowState->SetPSTexture(extendedIndex, materialBase->landscapeEnvMaskTex[textureI]->rendererTexture);
       }
-      else if (materialBase->landscapeHeightTex[textureI] != nullptr &&
-               materialBase->landscapeHeightTex[textureI] != runtimeState.defaultHeightMap &&
-               materialBase->landscapeHeightTex[textureI] != runtimeState.defaultTextureNormalMap) {
+      else if (materialBase->landscapeHeightTex[textureI] != nullptr) {
         // Has a height map
-        const uint32_t heightIndex = ExtendedStartIndex + textureI;
-        shadowState->SetPSTexture(heightIndex, materialBase->landscapeHeightTex[textureI]->rendererTexture);
-      }*/
+        shadowState->SetPSTexture(extendedIndex, materialBase->landscapeHeightTex[textureI]->rendererTexture);
+      }
+      else {
+        // No extended map, use default
+        shadowState->SetPSTexture(extendedIndex, runtimeState.defaultTextureBlack->rendererTexture);
+      }
+
+      // Cubemap
+      const uint32_t cubemapIndex = ExtendedStartIndex + 6 + textureI;
+      if (materialBase->landscapeEnvTex[textureI] != nullptr) {
+        shadowState->SetPSTexture(cubemapIndex, materialBase->landscapeEnvTex[textureI]->rendererTexture);
+      } else {
+        shadowState->SetPSTexture(cubemapIndex, runtimeState.defaultReflectionCubeMap->rendererTexture);
+      }
     }
 
     // Assign terrain overlay and noise texture to slots
@@ -113,6 +115,7 @@ struct BSLightingShader_SetupMaterial
     }
 
     {
+      // LOD parameters
       std::array<float, 4> lodTexParams;
       lodTexParams[0] = materialBase->terrainTexOffsetX;
       lodTexParams[1] = materialBase->terrainTexOffsetY;
@@ -122,6 +125,7 @@ struct BSLightingShader_SetupMaterial
     }
 
     {
+      // Texture coord offset and scale
       const uint32_t bufferIndex = RE::BSShaderManager::State::GetSingleton().textureTransformCurrentBuffer;
 
       std::array<float, 4> texCoordOffsetScale;
@@ -132,6 +136,7 @@ struct BSLightingShader_SetupMaterial
       shadowState->SetVSConstant(texCoordOffsetScale, RE::BSGraphics::ConstantGroupLevel::PerMaterial, 11);
     }
 
+    // Apply constant groups
     RE::BSGraphics::Renderer::FlushVSConstantGroup(RE::BSGraphics::ConstantGroupLevel::PerMaterial);
     RE::BSGraphics::Renderer::FlushPSConstantGroup(RE::BSGraphics::ConstantGroupLevel::PerMaterial);
     RE::BSGraphics::Renderer::ApplyVSConstantGroup(RE::BSGraphics::ConstantGroupLevel::PerMaterial);
@@ -143,21 +148,6 @@ struct BSLightingShader_SetupMaterial
 
 RE::TESLandTexture* GetDefaultLandTexture()
 {
-  // Find textureset by editorid
-  auto dataHandler = RE::TESDataHandler::GetSingleton();
-  if (!dataHandler) {
-    return nullptr;
-  }
-
-  // Get all TextureSet forms
-  const auto& textureSets = dataHandler->GetFormArray<RE::TESLandTexture>();
-  for (auto* textureSet : textureSets) {
-    if (textureSet != nullptr && clib_util::editorID::get_editorID(textureSet) == "LDefault") {
-      return textureSet;
-    }
-  }
-
-  // Get it from vanilla address
   static const auto defaultLandTextureAddress = REL::Relocation<RE::TESLandTexture**>(RELOCATION_ID(514783, 400936));
   return *defaultLandTextureAddress;
 }
@@ -196,8 +186,8 @@ struct TESObjectLAND_SetupMaterial
       auto shaderProperty = static_cast<RE::BSLightingShaderProperty*>(RE::MemoryManager::GetSingleton()->Allocate(REL::Module::IsVR() ? 0x178 : sizeof(RE::BSLightingShaderProperty), 0, false));
       shaderProperty->Ctor();
 
-      // Create a new material
       {
+        // Create a new material
         BSLSMLandscapeExtended material;
         shaderProperty->LinkMaterial(&material, true);
       }
@@ -208,14 +198,14 @@ struct TESObjectLAND_SetupMaterial
 
       // Set initial textures
       for (uint32_t textureI = 0; textureI < 6; ++textureI) {
-        material->landscapeDiffuseTex[textureI] = stateData.defaultTextureBlack;
-        material->landscapeNormalTex[textureI] = stateData.defaultTextureNormalMap;
-        material->landscapeGlowTex[textureI] = stateData.defaultTextureBlack;
-        material->landscapeHeightTex[textureI] = stateData.defaultHeightMap;
-        material->landscapeEnvTex[textureI] = stateData.defaultReflectionCubeMap;
-        material->landscapeEnvMaskTex[textureI] = stateData.defaultTextureBlack;
-        material->landscapeSubsurfaceTex[textureI] = stateData.defaultTextureBlack;
-        material->landscapeBacklightTex[textureI] = stateData.defaultTextureBlack;
+        material->landscapeDiffuseTex[textureI] = nullptr;
+        material->landscapeNormalTex[textureI] = nullptr;
+        material->landscapeGlowTex[textureI] = nullptr;
+        material->landscapeHeightTex[textureI] = nullptr;
+        material->landscapeEnvTex[textureI] = nullptr;
+        material->landscapeEnvMaskTex[textureI] = nullptr;
+        material->landscapeSubsurfaceTex[textureI] = nullptr;
+        material->landscapeBacklightTex[textureI] = nullptr;
       }
 
       // Create array of texture sets (6 tiles)
@@ -308,10 +298,41 @@ struct TESObjectLAND_SetupMaterial
   static inline REL::Relocation<decltype(thunk)> func;
 };
 
+void onDataLoaded() {
+  // Replace default texture set if needed
+  const auto defaultLandTextureSet = RE::TESForm::LookupByEditorID<RE::BGSTextureSet>("LandscapeDefault");
+  if (defaultLandTextureSet != nullptr) {
+    if (auto* defaultLandTexture = GetDefaultLandTexture()) {
+      spdlog::info("Replacing default land texture set record with {}", clib_util::editorID::get_editorID(defaultLandTextureSet));
+      defaultLandTexture->textureSet = defaultLandTextureSet;
+    }
+    else {
+      spdlog::error("Default land texture set record not found");
+    }
+  }
+  else {
+    spdlog::info("LandscapeDefault EDID texture set not found, using default");
+  }
+}
+
+void MessageHandler(SKSE::MessagingInterface::Message* a_msg) {
+  switch (a_msg->type) {
+  case SKSE::MessagingInterface::kDataLoaded:
+    onDataLoaded();
+    break;
+  }
+}
+
 extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface* skse) {
   SKSE::Init(skse);
   SetupLog();
-  spdlog::info("Plugin loaded.");
+  spdlog::info("Plugin loaded");
+
+  // Register messaging interface
+  auto messaging = SKSE::GetMessagingInterface();
+  if (!messaging->RegisterListener("SKSE", MessageHandler)) {
+    return false;
+  }
 
   // Allocate Trampoline
   SKSE::AllocTrampoline(64);
