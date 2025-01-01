@@ -2,3 +2,6 @@
 	path = extern/commonlibsse
 	url = https://github.com/alandtse/CommonLibVR.git
 	branch = ng
+[submodule "extern/CLibUtil"]
+	path = extern/CLibUtil
+	url = https://github.com/powerof3/CLibUtil.git
