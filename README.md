@@ -4,8 +4,8 @@ SKSE plugin which allows Skyrim to read more than just diffuse and normal slots 
 
 ## Requiredments
 
-* (Address Library)[https://www.nexusmods.com/skyrimspecialedition/mods/32444]
-* (PO3 Tweaks)[https://www.nexusmods.com/skyrimspecialedition/mods/51073]
+* [Address Library](https://www.nexusmods.com/skyrimspecialedition/mods/32444)
+* [PO3 Tweaks](https://www.nexusmods.com/skyrimspecialedition/mods/51073)
 
 ## Mod Authors
 
