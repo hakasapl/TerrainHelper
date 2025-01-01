@@ -35,11 +35,10 @@ public:
 	// members
 	std::uint32_t numLandscapeTextures = 0;
 
-	// We need terrainOverlayTexture, terrainNoiseTexture, landBlendParams, terrainTexOffsetX, terrainTexOffsetY, terrainTexFade
-	// to be at the same offsets as in vanilla BSLightingShaderMaterialLandscape so we arrange PBR fields in specific way
+	// THESE ARE ORDERED IN A SPECIFIC WAY TO MATCH ASSERTIONS
 	std::array<RE::NiPointer<RE::NiSourceTexture>, 6> landscapeDiffuseTex;
-	std::array<bool, 6> _padding1;
-	std::array<float, 6> _padding2;
+
+	std::array<uint32_t, 8> padding0D4;
 
 	RE::NiPointer<RE::NiSourceTexture> terrainOverlayTexture;
 	RE::NiPointer<RE::NiSourceTexture> terrainNoiseTexture;
@@ -51,7 +50,7 @@ public:
 	float terrainTexOffsetY = 0.f;
 	float terrainTexFade = 0.f;
 
-	// Extended Texture Storage
+	// Extended Texture Storage (After this line order doesn't matter)
 	std::array<RE::NiPointer<RE::NiSourceTexture>, 6> landscapeGlowTex;
 	std::array<RE::NiPointer<RE::NiSourceTexture>, 6> landscapeHeightTex;
 	std::array<RE::NiPointer<RE::NiSourceTexture>, 6> landscapeEnvTex;
@@ -60,6 +59,7 @@ public:
 	std::array<RE::NiPointer<RE::NiSourceTexture>, 6> landscapeBacklightTex;
 };
 
+static_assert(offsetof(BSLSMLandscapeExtended, numLandscapeTextures) == offsetof(RE::BSLightingShaderMaterialLandscape, numLandscapeTextures));
 static_assert(offsetof(BSLSMLandscapeExtended, terrainOverlayTexture) == offsetof(RE::BSLightingShaderMaterialLandscape, terrainOverlayTexture));
 static_assert(offsetof(BSLSMLandscapeExtended, terrainNoiseTexture) == offsetof(RE::BSLightingShaderMaterialLandscape, terrainNoiseTexture));
 static_assert(offsetof(BSLSMLandscapeExtended, landBlendParams) == offsetof(RE::BSLightingShaderMaterialLandscape, landBlendParams));

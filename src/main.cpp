@@ -54,6 +54,10 @@ struct BSLightingShader_SetupMaterial
     auto shadowState = RE::BSGraphics::RendererShadowState::GetSingleton();
     auto runtimeState = RE::BSGraphics::State::GetSingleton()->GetRuntimeData();
 
+    RE::BSGraphics::Renderer::PrepareVSConstantGroup(RE::BSGraphics::ConstantGroupLevel::PerMaterial);
+    RE::BSGraphics::Renderer::PreparePSConstantGroup(RE::BSGraphics::ConstantGroupLevel::PerMaterial);
+    //const auto& lightingPSConstants = RE::ShaderConstants::LightingPS::Get();
+
     static constexpr size_t NormalStartIndex = 7;
     static constexpr size_t ExtendedStartIndex = 16;
 
@@ -107,6 +111,31 @@ struct BSLightingShader_SetupMaterial
       shadowState->SetPSTextureAddressMode(15, RE::BSGraphics::TextureAddressMode::kWrapSWrapT);
       shadowState->SetPSTextureFilterMode(15, RE::BSGraphics::TextureFilterMode::kBilinear);
     }
+
+    {
+      std::array<float, 4> lodTexParams;
+      lodTexParams[0] = materialBase->terrainTexOffsetX;
+      lodTexParams[1] = materialBase->terrainTexOffsetY;
+      lodTexParams[2] = 1.f;
+      lodTexParams[3] = materialBase->terrainTexFade;
+      shadowState->SetPSConstant(lodTexParams, RE::BSGraphics::ConstantGroupLevel::PerMaterial, REL::Module::IsVR() ? 30 : 24);
+    }
+
+    {
+      const uint32_t bufferIndex = RE::BSShaderManager::State::GetSingleton().textureTransformCurrentBuffer;
+
+      std::array<float, 4> texCoordOffsetScale;
+      texCoordOffsetScale[0] = materialBase->texCoordOffset[bufferIndex].x;
+      texCoordOffsetScale[1] = materialBase->texCoordOffset[bufferIndex].y;
+      texCoordOffsetScale[2] = materialBase->texCoordScale[bufferIndex].x;
+      texCoordOffsetScale[3] = materialBase->texCoordScale[bufferIndex].y;
+      shadowState->SetVSConstant(texCoordOffsetScale, RE::BSGraphics::ConstantGroupLevel::PerMaterial, 11);
+    }
+
+    RE::BSGraphics::Renderer::FlushVSConstantGroup(RE::BSGraphics::ConstantGroupLevel::PerMaterial);
+    RE::BSGraphics::Renderer::FlushPSConstantGroup(RE::BSGraphics::ConstantGroupLevel::PerMaterial);
+    RE::BSGraphics::Renderer::ApplyVSConstantGroup(RE::BSGraphics::ConstantGroupLevel::PerMaterial);
+    RE::BSGraphics::Renderer::ApplyPSConstantGroup(RE::BSGraphics::ConstantGroupLevel::PerMaterial);
   };
 
   static inline REL::Relocation<decltype(thunk)> func;
