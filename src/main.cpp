@@ -14,6 +14,8 @@
 #include <SKSE/Trampoline.h>
 #include <spdlog/sinks/basic_file_sink.h>
 
+#include "CLIBUtil/editorID.hpp"
+
 #include "PCH.h"
 #include "BSLSMLandscapeExtended.hpp"
 
@@ -41,19 +43,16 @@ struct BSLightingShader_SetupMaterial
 {
   static void thunk(RE::BSLightingShader* shader, RE::BSLightingShaderMaterialBase const* material)
   {
-    const auto lightingType = (shader->currentRawTechnique >> 24) & 0x3F;
-    if (lightingType != 8 && lightingType != 19) {
-      // Not terrain
+    // get material
+    auto materialBase = dynamic_cast<const BSLSMLandscapeExtended*>(material);
+    if (materialBase == nullptr) {
+      // Not our material
       return func(shader, material);
     }
 
     // get renderer and shadow state
     auto shadowState = RE::BSGraphics::RendererShadowState::GetSingleton();
     auto runtimeState = RE::BSGraphics::State::GetSingleton()->GetRuntimeData();
-    auto renderer = RE::BSGraphics::Renderer::GetSingleton();
-
-    // get material
-    auto materialBase = static_cast<const BSLSMLandscapeExtended*>(material);
 
     static constexpr size_t NormalStartIndex = 7;
     static constexpr size_t ExtendedStartIndex = 16;
@@ -72,25 +71,31 @@ struct BSLightingShader_SetupMaterial
         shadowState->SetPSTextureAddressMode(NormalStartIndex, RE::BSGraphics::TextureAddressMode::kWrapSWrapT);
         shadowState->SetPSTextureFilterMode(NormalStartIndex, RE::BSGraphics::TextureFilterMode::kAnisotropic);
       }
-      // Environment Mask
-      if (materialBase->landscapeEnvMaskTex[textureI] != nullptr && materialBase->landscapeEnvMaskTex[textureI] != runtimeState.defaultTextureBlack && materialBase->landscapeEnvMaskTex[textureI] != runtimeState.defaultTextureNormalMap) {
+
+      // Extended Slots
+      /*if (materialBase->landscapeEnvMaskTex[textureI] != nullptr &&
+          materialBase->landscapeEnvMaskTex[textureI] != runtimeState.defaultTextureBlack &&
+          materialBase->landscapeEnvMaskTex[textureI] != runtimeState.defaultTextureNormalMap) {
+        // Has an Environment Mask
         const uint32_t envMaskIndex = ExtendedStartIndex + textureI;
         shadowState->SetPSTexture(envMaskIndex, materialBase->landscapeEnvMaskTex[textureI]->rendererTexture);
 
-        // Environment
+        // Check if Cubemap exists
         if (materialBase->landscapeEnvTex[textureI] != nullptr && materialBase->landscapeEnvTex[textureI] != runtimeState.defaultReflectionCubeMap && materialBase->landscapeEnvTex[textureI] != runtimeState.defaultTextureNormalMap) {
           const uint32_t envIndex = ExtendedStartIndex + 6 + textureI;
           shadowState->SetPSTexture(envIndex, materialBase->landscapeEnvTex[textureI]->rendererTexture);
         }
       }
-      else if (materialBase->landscapeHeightTex[textureI] != nullptr && materialBase->landscapeHeightTex[textureI] != runtimeState.defaultHeightMap && materialBase->landscapeHeightTex[textureI] != runtimeState.defaultTextureNormalMap) {
-        // Height map
+      else if (materialBase->landscapeHeightTex[textureI] != nullptr &&
+               materialBase->landscapeHeightTex[textureI] != runtimeState.defaultHeightMap &&
+               materialBase->landscapeHeightTex[textureI] != runtimeState.defaultTextureNormalMap) {
+        // Has a height map
         const uint32_t heightIndex = ExtendedStartIndex + textureI;
         shadowState->SetPSTexture(heightIndex, materialBase->landscapeHeightTex[textureI]->rendererTexture);
-      }
+      }*/
     }
 
-    // Assign textures to slots
+    // Assign terrain overlay and noise texture to slots
     if (materialBase->terrainOverlayTexture != nullptr) {
       shadowState->SetPSTexture(13, materialBase->terrainOverlayTexture->rendererTexture);
       shadowState->SetPSTextureAddressMode(13, RE::BSGraphics::TextureAddressMode::kClampSClampT);
@@ -109,6 +114,21 @@ struct BSLightingShader_SetupMaterial
 
 RE::TESLandTexture* GetDefaultLandTexture()
 {
+  // Find textureset by editorid
+  auto dataHandler = RE::TESDataHandler::GetSingleton();
+  if (!dataHandler) {
+    return nullptr;
+  }
+
+  // Get all TextureSet forms
+  const auto& textureSets = dataHandler->GetFormArray<RE::TESLandTexture>();
+  for (auto* textureSet : textureSets) {
+    if (textureSet != nullptr && clib_util::editorID::get_editorID(textureSet) == "LDefault") {
+      return textureSet;
+    }
+  }
+
+  // Get it from vanilla address
   static const auto defaultLandTextureAddress = REL::Relocation<RE::TESLandTexture**>(RELOCATION_ID(514783, 400936));
   return *defaultLandTextureAddress;
 }
@@ -118,14 +138,31 @@ struct TESObjectLAND_SetupMaterial
   static bool thunk(RE::TESObjectLAND* land)
   {
     if (land->loadedData == nullptr || land->loadedData->mesh[0] == nullptr) {
-      return false;
+      return func(land);
+    }
+
+    // Check if terrain has PBR in it (preserves compatibility with community shaders, since they do their own PBR terrain)
+    for (uint32_t quadI = 0; quadI < 4; ++quadI) {
+      for (uint32_t textureI = 0; textureI < 6; ++textureI) {
+        if (land->loadedData->quadTextures[quadI][textureI] != nullptr && land->loadedData->quadTextures[quadI][textureI]->textureSet != nullptr) {
+          // Get DiffusePath
+          const auto EditorID = clib_util::editorID::get_editorID(land->loadedData->quadTextures[quadI][textureI]->textureSet);
+          // Build full path
+          const auto JSONPath = "PBRTextureSets\\" + EditorID + ".json";
+          // Check if file exists
+          RE::BSResourceNiBinaryStream fileStream{ JSONPath };
+          if (fileStream.good()) {
+            // File exists, this is PBR terrain, leave it to CS
+            return false;
+          }
+        }
+      }
     }
 
     static const auto settings = RE::INISettingCollection::GetSingleton();
     static const bool bEnableLandFade = settings->GetSetting("bEnableLandFade:Display");
     static const bool bDrawLandShadows = settings->GetSetting("bDrawLandShadows:Display");
 
-    land->data.flags.set(static_cast<RE::OBJ_LAND::Flag>(8));
     for (uint32_t quadI = 0; quadI < 4; ++quadI) {
       auto shaderProperty = static_cast<RE::BSLightingShaderProperty*>(RE::MemoryManager::GetSingleton()->Allocate(REL::Module::IsVR() ? 0x178 : sizeof(RE::BSLightingShaderProperty), 0, false));
       shaderProperty->Ctor();
@@ -264,7 +301,7 @@ extern "C" DLLEXPORT constinit auto SKSEPlugin_Version = []() noexcept {
   v.UsesAddressLibrary();
   v.UsesNoStructs();
   return v;
-}();
+  }();
 
 extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Query(const SKSE::QueryInterface*, SKSE::PluginInfo* pluginInfo)
 {

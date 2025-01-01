@@ -5,6 +5,13 @@
 class BSLSMLandscapeExtended : public RE::BSLightingShaderMaterialBase
 {
 public:
+	enum class TerrainShaderType {
+		UNKNOWN,
+		VANILLA,
+		TERRAINPARALLAX,
+		TERRAINENVMAP
+	};
+
 	inline static constexpr auto DiffuseTexture = static_cast<RE::BSTextureSet::Texture>(0);
 	inline static constexpr auto NormalTexture = static_cast<RE::BSTextureSet::Texture>(1);
 	inline static constexpr auto GlowTexture = static_cast<RE::BSTextureSet::Texture>(2);
@@ -31,8 +38,8 @@ public:
 	// We need terrainOverlayTexture, terrainNoiseTexture, landBlendParams, terrainTexOffsetX, terrainTexOffsetY, terrainTexFade
 	// to be at the same offsets as in vanilla BSLightingShaderMaterialLandscape so we arrange PBR fields in specific way
 	std::array<RE::NiPointer<RE::NiSourceTexture>, 6> landscapeDiffuseTex;
-	std::array<bool, 6> isPbr;
-	std::array<float, 6> roughnessScales;
+	std::array<bool, 6> _padding1;
+	std::array<float, 6> _padding2;
 
 	RE::NiPointer<RE::NiSourceTexture> terrainOverlayTexture;
 	RE::NiPointer<RE::NiSourceTexture> terrainNoiseTexture;

@@ -29,6 +29,10 @@ endif()
 set(BUILD_TESTS OFF)
 add_subdirectory("extern/commonlibsse" commonlibsse)
 
+# clib-util
+add_subdirectory("extern/CLibUtil" CLibUtil)
+include_directories("extern/CLibUtil/include")
+
 set(headers
 	"include/PCH.h"
   "include/BSLSMLandscapeExtended.hpp"
