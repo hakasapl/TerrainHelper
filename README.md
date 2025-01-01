@@ -2,6 +2,11 @@
 
 SKSE plugin which allows Skyrim to read more than just diffuse and normal slots for terrain
 
+## Requiredments
+
+* (Address Library)[https://www.nexusmods.com/skyrimspecialedition/mods/32444]
+* (PO3 Tweaks)[https://www.nexusmods.com/skyrimspecialedition/mods/51073]
+
 ## Mod Authors
 
 Skyrim has a notion of "default landscape texture set". This is usually set in `skyrim.ini` but you can only set diffuse/normal in the ini file. It is by default set to `dirt02.dds` and `dirt02_n.dds`, respectively. Since this plugin allows for more slots, you will need to define a "default landscape" texture set in a plugin. Just create a texture set and give it the editor ID `LandscapeDefault` and this plugin will automatically use it instead of skyrim.ini as the source.
