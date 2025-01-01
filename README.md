@@ -28,6 +28,6 @@ In addition, the following helper constants are defined:
 
 # Acknowledgements
 
-This plugin is derived from the work of the Community Shaders TruePBR feature, which allows for terrain with PBR-relevant slots. This plugin expands that to all available slots and removes the dependency on Community Shaders. The Community Shaders repository can be found [here](https://github.com/doodlum/skyrim-community-shaders). Give them a star!
+This plugin would not be possible without the work of the Community Shaders team. Their PBR feature allows for terrain with PBR-relevant slots, so I was able to analyze their code to better understand a method of accomplishing this. The Community Shaders repository can be found [here](https://github.com/doodlum/skyrim-community-shaders). Give them a star!
 
-Thanks to the helpful people on the Community Shaders discord, ENBSeries discord, and the Skyrim RE discord, for helping figure out some concepts needed for this plugin.
+Thanks to the helpful people on the Community Shaders discord, ENBSeries discord, and the Skyrim RE discord, for helping figure out some concepts needed for this plugin as well as testing.
