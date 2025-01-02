@@ -1,5 +1,7 @@
 # Skyrim Terrain Slot Unlocker
 
+[![Build Status](https://github.com/hakasapl/SkyrimTerrainSlotUnlocker/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/hakasapl/SkyrimTerrainSlotUnlocker/actions/workflows/build.yml)
+
 SKSE plugin which allows Skyrim to read more than just diffuse and normal slots for terrain
 
 ## Requirements
