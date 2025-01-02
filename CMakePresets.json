@@ -9,10 +9,10 @@
         {
             "name": "base",
             "hidden": true,
-            "cacheVariables": {
-                "CMAKE_CXX_FLAGS": "$env{COMMONLIBSSE_COMPILER} $env{COMMONLIBSSE_PLATFORM} $env{COMMONLIBSSE_TEXT}",
-                "CMAKE_EXPORT_COMPILE_COMMANDS": "TRUE"
-            }
+          "cacheVariables": {
+            "CMAKE_CXX_FLAGS": "$env{COMMONLIBSSE_COMPILER} $env{COMMONLIBSSE_PLATFORM} $env{COMMONLIBSSE_TEXT}",
+            "CMAKE_EXPORT_COMPILE_COMMANDS": "TRUE"
+          }
         },
         {
             "name": "vcpkg",
@@ -51,7 +51,7 @@
         {
             "name": "msvc",
             "hidden": true,
-            "cacheVariables": 
+            "cacheVariables":
             {
                 "CMAKE_CXX_COMPILER": "cl.exe"
             },

@@ -33,6 +33,9 @@ add_subdirectory("extern/commonlibsse" commonlibsse)
 add_subdirectory("extern/CLibUtil" CLibUtil)
 include_directories("extern/CLibUtil/include")
 
+# detours
+include_directories("extern/detours")
+
 set(headers
 	"include/PCH.h"
   "include/BSLSMLandscapeExtended.hpp"
@@ -58,7 +61,8 @@ target_link_libraries(
   "${PROJECT_NAME}"
   PRIVATE
   CommonLibSSE::CommonLibSSE
-  ${CMAKE_SOURCE_DIR}/include/detours/Debug/detours.lib
+  debug ${CMAKE_SOURCE_DIR}/extern/detours/detours/Debug/detours.lib
+  optimized ${CMAKE_SOURCE_DIR}/extern/detours/detours/Release/detours.lib
 )
 
 # When your SKSE .dll is compiled, this will automatically copy the .dll into your mods folder.

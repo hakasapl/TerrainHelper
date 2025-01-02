@@ -1,0 +1,44 @@
+name: Build and Publish Artifacts
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - uses: ilammy/msvc-dev-cmd@v1
+      with:
+        arch: amd64
+
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+      with:
+        submodules: true
+        fetch-depth: 0
+
+    - name: Configure CMake
+      run: |
+        cmake --preset=build-release-msvc
+
+    - name: Build and Install
+      run: |
+        cd build
+        cmake --build --config release-msvc
+
+    - name: Prepare artifacts folder
+      run: |
+        New-Item -ItemType Directory -Path "artifacts/SKSE/Plugins" -Force
+        Copy-Item -Recurse -Force build/release-msvc/SkyrimTerrainSlotUnlocker.dll artifacts/SKSE/Plugins/
+
+    - name: Upload Build Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: skyrimterrainslotunlocker-artifacts-${{ github.sha }}
+        path: artifacts
