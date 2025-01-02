@@ -57,26 +57,19 @@ struct BSLightingShader_SetupMaterial
     static constexpr size_t NormalStartIndex = 7;
     static constexpr size_t ExtendedStartIndex = 16;
 
-    array<uint32_t, 6> materialTypes;
-    // 0 = nothing
-    // 1 = vanilla (diffuse + normal)
-    // 2 = parallax (diffuse + normal + height)
-    // 3 = envmap (diffuse + normal + envmask + cubemap)
-
     for (uint32_t textureI = 0; textureI < 6; ++textureI) {
       // Diffuse
       if (materialBase->landscapeDiffuseTex[textureI] != nullptr) {
         shadowState->SetPSTexture(textureI, materialBase->landscapeDiffuseTex[textureI]->rendererTexture);
         shadowState->SetPSTextureAddressMode(textureI, RE::BSGraphics::TextureAddressMode::kWrapSWrapT);
         shadowState->SetPSTextureFilterMode(textureI, RE::BSGraphics::TextureFilterMode::kAnisotropic);
-        materialTypes[textureI] = 1;
       } else {
         shadowState->SetPSTexture(textureI, runtimeState.defaultTextureBlack->rendererTexture);
       }
 
       // Normal
       const uint32_t normalIndex = NormalStartIndex + textureI;
-      if (materialTypes[textureI] = 1 && materialBase->landscapeNormalTex[textureI] != nullptr) {
+      if (materialBase->landscapeNormalTex[textureI] != nullptr) {
         shadowState->SetPSTexture(normalIndex, materialBase->landscapeNormalTex[textureI]->rendererTexture);
         shadowState->SetPSTextureAddressMode(NormalStartIndex, RE::BSGraphics::TextureAddressMode::kWrapSWrapT);
         shadowState->SetPSTextureFilterMode(NormalStartIndex, RE::BSGraphics::TextureFilterMode::kAnisotropic);
@@ -85,28 +78,15 @@ struct BSLightingShader_SetupMaterial
       }
 
       // Extended Slots
-      const uint32_t extendedIndex = ExtendedStartIndex + textureI;
-      if (materialBase->landscapeEnvMaskTex[textureI] != nullptr) {
-        // Has an Environment Mask
-        shadowState->SetPSTexture(extendedIndex, materialBase->landscapeEnvMaskTex[textureI]->rendererTexture);
-        materialTypes[textureI] = 3;
-      }
-      else if (materialBase->landscapeHeightTex[textureI] != nullptr) {
-        // Has a height map
-        shadowState->SetPSTexture(extendedIndex, materialBase->landscapeHeightTex[textureI]->rendererTexture);
-        materialTypes[textureI] = 2;
-      }
-      else {
-        // No extended map, use default
-        shadowState->SetPSTexture(extendedIndex, runtimeState.defaultTextureBlack->rendererTexture);
+      if (materialBase->landscapeHeightTex[textureI] != nullptr && materialBase->landscapeHeightTex[textureI] != runtimeState.defaultTextureNormalMap) {
+        const uint32_t heightIndex = ExtendedStartIndex + textureI;
+        shadowState->SetPSTexture(heightIndex, materialBase->landscapeHeightTex[textureI]->rendererTexture);
       }
 
-      // Cubemap
-      const uint32_t cubemapIndex = ExtendedStartIndex + 6 + textureI;
-      if (materialTypes[textureI] == 3 && materialBase->landscapeEnvTex[textureI] != nullptr) {
-        shadowState->SetPSTexture(cubemapIndex, materialBase->landscapeEnvTex[textureI]->rendererTexture);
-      } else {
-        shadowState->SetPSTexture(cubemapIndex, runtimeState.defaultReflectionCubeMap->rendererTexture);
+      if (materialBase->landscapeEnvMaskTex[textureI] != nullptr && materialBase->landscapeEnvMaskTex[textureI] != runtimeState.defaultTextureNormalMap) {
+        // Has an Environment Mask
+        const uint32_t envmaskIndex = ExtendedStartIndex + 6 + textureI;
+        shadowState->SetPSTexture(envmaskIndex, materialBase->landscapeEnvMaskTex[textureI]->rendererTexture);
       }
     }
 
@@ -131,11 +111,6 @@ struct BSLightingShader_SetupMaterial
       lodTexParams[2] = 1.f;
       lodTexParams[3] = materialBase->terrainTexFade;
       shadowState->SetPSConstant(lodTexParams, RE::BSGraphics::ConstantGroupLevel::PerMaterial, REL::Module::IsVR() ? 30 : 24);
-    }
-
-    {
-      // material type parameter
-      shadowState->SetPSConstant(materialTypes, RE::BSGraphics::ConstantGroupLevel::PerMaterial, 60);
     }
 
     {

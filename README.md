@@ -18,18 +18,8 @@ This plugin replaces the landscape shader material with a custom one that implem
 These additional shader slots are defined as follows:
 
 * `0` - `15` are the same as they were in vanilla
-* `16` - `21` are either height maps or env mask maps, depending on which is available (if both are available, env mask map is used)
-* `22` - `27` are for cubemaps/environment maps, which are only used if env mask is available
-
-In addition, the following helper constants are defined:
-
-* Slot `60`: `array` of 6x `uint32_t` which define the material for each texture.
-  ```
-  0 = no material
-  1 = vanilla
-  2 = parallax
-  3 = env mapping / complex material
-  ```
+* `16` - `21` will be set for any height maps available, otherwise slot will not be set
+* `22` - `27` will be set for any env mask maps available, otherwise slot will not be set
 
 # Acknowledgements
 
