@@ -29,7 +29,6 @@ jobs:
 
     - name: Build and Install
       run: |
-        cd build
         cmake --build --config release-msvc
 
     - name: Prepare artifacts folder
