@@ -38,12 +38,10 @@ include_directories("extern/detours")
 
 set(headers
 	"include/PCH.h"
-  "include/BSLSMLandscapeExtended.hpp"
 )
 
 set(sources
   "src/main.cpp"
-  "src/BSLSMLandscapeExtended.cpp"
 )
 
 add_library("${PROJECT_NAME}" SHARED ${sources} ${headers})
