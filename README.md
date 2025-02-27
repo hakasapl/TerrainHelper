@@ -53,8 +53,6 @@ These are all the slots in the extended terrain shader:
   * `26` = TEX 5 Environment Mask
   * `27` = TEX 6 Environment Mask
 
-**NOTE** Height and environment mask are mutually exclusive. When both are available env mask will be set. In a single shader materials might be mismatched. For example `TEX 1` could have a height map assigned, where `TEX 2` could have an environment mask assigned, etc.
-
 ## Acknowledgements
 
 This plugin would not be possible without the work of the Community Shaders team. Their PBR feature allows for terrain with PBR-relevant slots, so I was able to analyze their code to better understand a method of accomplishing this. The Community Shaders repository can be found [here](https://github.com/doodlum/skyrim-community-shaders). Give them a star!

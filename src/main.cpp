@@ -1,6 +1,3 @@
-#include <RE/B/BGSCameraPath.h>
-#include <RE/B/BSFixedString.h>
-#include <RE/B/BSShaderManager.h>
 #include <RE/B/BSShader.h>
 #include <RE/I/INISettingCollection.h>
 #include <RE/Offsets_RTTI.h>
@@ -13,8 +10,6 @@
 #include <SKSE/SKSE.h>
 #include <SKSE/Trampoline.h>
 #include <spdlog/sinks/basic_file_sink.h>
-
-#include "d3d11.h"
 
 #include "CLIBUtil/editorID.hpp"
 
@@ -29,7 +24,7 @@ void SetupLog() {
     if (!logsFolder) {
         SKSE::stl::report_and_fail("SKSE log_directory not provided, logs disabled.");
     }
-    auto logFilePath = *logsFolder / "skyrimterrainslotunlocker.log";
+    auto logFilePath = *logsFolder / "TerrainHelper.log";
     auto fileLoggerPtr = std::make_shared<spdlog::sinks::basic_file_sink_mt>(logFilePath.string(), true);
     auto loggerPtr = std::make_shared<spdlog::logger>("log", std::move(fileLoggerPtr));
     spdlog::set_default_logger(std::move(loggerPtr));
@@ -210,8 +205,8 @@ extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface* sks
 
 extern "C" DLLEXPORT constinit auto SKSEPlugin_Version = []() noexcept {
     SKSE::PluginVersionData v;
-    v.PluginName("SkyrimTerrainSlotUnlocker");
-    v.PluginVersion(REL::Version("0.1.0"));
+    v.PluginName(PLUGIN_NAME);
+    v.PluginVersion(REL::Version(PLUGIN_VERSION));
     v.UsesAddressLibrary();
     v.UsesNoStructs();
     return v;
