@@ -34,10 +34,10 @@ jobs:
     - name: Prepare artifacts folder
       run: |
         New-Item -ItemType Directory -Path "artifacts/SKSE/Plugins" -Force
-        Copy-Item -Recurse -Force build/release-msvc/SkyrimTerrainSlotUnlocker.dll artifacts/SKSE/Plugins/
+        Copy-Item -Recurse -Force build/release-msvc/TerrainHelper.dll artifacts/SKSE/Plugins/
 
     - name: Upload Build Artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: skyrimterrainslotunlocker-artifacts-${{ github.sha }}
+        name: terrainhelper-artifacts-${{ github.sha }}
         path: artifacts

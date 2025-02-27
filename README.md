@@ -1,4 +1,4 @@
-# Skyrim Terrain Slot Unlocker
+# Terrain Helper
 
 [![Build Status](https://github.com/hakasapl/SkyrimTerrainSlotUnlocker/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/hakasapl/SkyrimTerrainSlotUnlocker/actions/workflows/build.yml)
 
