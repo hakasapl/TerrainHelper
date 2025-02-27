@@ -45,13 +45,6 @@ These are all the slots in the extended terrain shader:
   * `19` = TEX 4 Height
   * `20` = TEX 5 Height
   * `21` = TEX 6 Height
-* `22` - `27` will be set for any env mask maps available, otherwise slot will not be set
-  * `22` = TEX 1 Environment Mask
-  * `23` = TEX 2 Environment Mask
-  * `24` = TEX 3 Environment Mask
-  * `25` = TEX 4 Environment Mask
-  * `26` = TEX 5 Environment Mask
-  * `27` = TEX 6 Environment Mask
 
 ## Acknowledgements
 
