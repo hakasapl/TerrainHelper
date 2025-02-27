@@ -54,20 +54,23 @@ struct BSLightingShader_SetupMaterial
         // get renderer and shadow state
         auto shadowState = RE::BSGraphics::RendererShadowState::GetSingleton();
 
+        const auto& stateData = RE::BSGraphics::State::GetSingleton()->GetRuntimeData();
+
         static constexpr size_t ParallaxStartIndex = 16;  // 16-21
         static constexpr size_t EnvmaskStartIndex = 22;  // 22-27
 
         // Populate extended slots
         for (uint32_t textureI = 0; textureI < 6; ++textureI) {
-            if (materialBase.parallax[textureI] != nullptr) {
+            if (materialBase.parallax[textureI] != nullptr && materialBase.parallax[textureI] != stateData.defaultTextureNormalMap) {
                 const uint32_t heightIndex = ParallaxStartIndex + textureI;
                 shadowState->SetPSTexture(heightIndex, materialBase.parallax[textureI]->rendererTexture);
             }
 
-            if (materialBase.envmask[textureI] != nullptr) {
-                const uint32_t heightIndex = EnvmaskStartIndex + textureI;
-                shadowState->SetPSTexture(heightIndex, materialBase.envmask[textureI]->rendererTexture);
-            }
+            // ENV MASK DISABLED FOR NOW
+            //if (materialBase.envmask[textureI] != nullptr) {
+            //    const uint32_t heightIndex = EnvmaskStartIndex + textureI;
+            //    shadowState->SetPSTexture(heightIndex, materialBase.envmask[textureI]->rendererTexture);
+            //}
         }
     };
 
@@ -113,9 +116,6 @@ struct TESObjectLAND_SetupMaterial
                 extendedSlots[hashKey] = {};
             }
 
-
-            const auto& stateData = RE::BSGraphics::State::GetSingleton()->GetRuntimeData();
-
             // Create array of texture sets (6 tiles)
             std::array<RE::TESLandTexture*, 6> textureSets;
             if (auto defTexture = land->loadedData->defQuadTextures[quadI]) {
@@ -145,9 +145,10 @@ struct TESObjectLAND_SetupMaterial
                     txSet->SetTexture(static_cast<RE::BSTextureSet::Texture>(3), extendedSlots[hashKey].parallax[textureI]);
                 }
 
-                if (txSet->GetTexturePath(static_cast<RE::BSTextureSet::Texture>(5)) != nullptr) {
-                    txSet->SetTexture(static_cast<RE::BSTextureSet::Texture>(5), extendedSlots[hashKey].envmask[textureI]);
-                }
+                // ENV MASK DISABLED FOR NOW
+                //if (txSet->GetTexturePath(static_cast<RE::BSTextureSet::Texture>(5)) != nullptr) {
+                //    txSet->SetTexture(static_cast<RE::BSTextureSet::Texture>(5), extendedSlots[hashKey].envmask[textureI]);
+                //}
             }
         }
 
