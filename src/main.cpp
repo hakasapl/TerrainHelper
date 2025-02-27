@@ -186,7 +186,7 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_msg) {
 extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface* skse) {
     SKSE::Init(skse);
     SetupLog();
-    spdlog::info("Plugin loaded");
+    spdlog::info("{} version {} loaded", PLUGIN_NAME, PLUGIN_VERSION);
 
     // Register messaging interface
     auto messaging = SKSE::GetMessagingInterface();
