@@ -61,7 +61,7 @@ struct BSLightingShader_SetupMaterial
 
         // Populate extended slots
         for (uint32_t textureI = 0; textureI < 6; ++textureI) {
-            if (materialBase.parallax[textureI] != nullptr) {
+            if (materialBase.parallax[textureI] != nullptr && materialBase.parallax[textureI] != stateData.defaultTextureNormalMap) {
                 const uint32_t heightIndex = ParallaxStartIndex + textureI;
                 shadowState->SetPSTexture(heightIndex, materialBase.parallax[textureI]->rendererTexture);
             }
@@ -94,6 +94,8 @@ struct TESObjectLAND_SetupMaterial
             return vanResult;
         }
 
+        const auto& stateData = RE::BSGraphics::State::GetSingleton()->GetRuntimeData();
+
         for (uint32_t quadI = 0; quadI < 4; ++quadI) {
             // Get hash key of vanilla material
             uint32_t hashKey = 0;
@@ -121,12 +123,7 @@ struct TESObjectLAND_SetupMaterial
                 textureSets[0] = GetDefaultLandTexture();
             }
             for (uint32_t textureI = 0; textureI < 5; ++textureI) {
-                if (auto landTexture = land->loadedData->quadTextures[quadI][textureI]) {
-                    textureSets[textureI + 1] = landTexture;
-                }
-                else {
-                    textureSets[textureI + 1] = nullptr;
-                }
+                textureSets[textureI + 1] = land->loadedData->quadTextures[quadI][textureI];
             }
 
             // Assign textures to material
@@ -143,6 +140,10 @@ struct TESObjectLAND_SetupMaterial
                     }
 
                     txSet->SetTexture(static_cast<RE::BSTextureSet::Texture>(3), extendedSlots[hashKey].parallax[textureI]);
+                    if (extendedSlots[hashKey].parallax[textureI] == stateData.defaultTextureNormalMap) {
+                        // this file was not found
+                        spdlog::error("Unable to find parallax map {}", txSet->GetTexturePath(static_cast<RE::BSTextureSet::Texture>(3)));
+                    }
                 }
 
                 // ENV MASK DISABLED FOR NOW
