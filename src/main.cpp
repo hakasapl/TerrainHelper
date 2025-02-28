@@ -114,6 +114,10 @@ struct TESObjectLAND_SetupMaterial
                 continue;
             }
 
+            if (!extendedSlots.contains(hashKey)) {
+                extendedSlots[hashKey] = {};
+            }
+
             // Create array of texture sets (6 tiles)
             std::array<RE::TESLandTexture*, 6> textureSets;
             if (auto defTexture = land->loadedData->defQuadTextures[quadI]) {
@@ -135,14 +139,10 @@ struct TESObjectLAND_SetupMaterial
                 auto txSet = textureSets[textureI]->textureSet;
 
                 if (txSet->GetTexturePath(static_cast<RE::BSTextureSet::Texture>(3)) != nullptr) {
-                    if (!extendedSlots.contains(hashKey)) {
-                        extendedSlots[hashKey] = {};
-                    }
-
                     txSet->SetTexture(static_cast<RE::BSTextureSet::Texture>(3), extendedSlots[hashKey].parallax[textureI]);
                     if (extendedSlots[hashKey].parallax[textureI] == stateData.defaultTextureNormalMap) {
                         // this file was not found
-                        spdlog::error("Unable to find parallax map {}", txSet->GetTexturePath(static_cast<RE::BSTextureSet::Texture>(3)));
+                        spdlog::error("Unable to find parallax map {} while setting up material", txSet->GetTexturePath(static_cast<RE::BSTextureSet::Texture>(3)));
                     }
                 }
 
