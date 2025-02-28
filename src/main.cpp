@@ -61,7 +61,7 @@ struct BSLightingShader_SetupMaterial
 
         // Populate extended slots
         for (uint32_t textureI = 0; textureI < 6; ++textureI) {
-            if (materialBase.parallax[textureI] != nullptr && materialBase.parallax[textureI] != stateData.defaultTextureNormalMap) {
+            if (materialBase.parallax[textureI] != nullptr) {
                 const uint32_t heightIndex = ParallaxStartIndex + textureI;
                 shadowState->SetPSTexture(heightIndex, materialBase.parallax[textureI]->rendererTexture);
             }
@@ -112,10 +112,6 @@ struct TESObjectLAND_SetupMaterial
                 continue;
             }
 
-            if (!extendedSlots.contains(hashKey)) {
-                extendedSlots[hashKey] = {};
-            }
-
             // Create array of texture sets (6 tiles)
             std::array<RE::TESLandTexture*, 6> textureSets;
             if (auto defTexture = land->loadedData->defQuadTextures[quadI]) {
@@ -142,6 +138,10 @@ struct TESObjectLAND_SetupMaterial
                 auto txSet = textureSets[textureI]->textureSet;
 
                 if (txSet->GetTexturePath(static_cast<RE::BSTextureSet::Texture>(3)) != nullptr) {
+                    if (!extendedSlots.contains(hashKey)) {
+                        extendedSlots[hashKey] = {};
+                    }
+
                     txSet->SetTexture(static_cast<RE::BSTextureSet::Texture>(3), extendedSlots[hashKey].parallax[textureI]);
                 }
 
