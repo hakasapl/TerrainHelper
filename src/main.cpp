@@ -11,6 +11,8 @@
 #include <SKSE/Trampoline.h>
 #include <spdlog/sinks/basic_file_sink.h>
 
+#include <unordered_set>
+
 #include "CLIBUtil/editorID.hpp"
 
 #include "PCH.h"
@@ -19,6 +21,7 @@
 
 using namespace std;
 
+unordered_set<string> texturesErrorLogged;
 void SetupLog() {
     auto logsFolder = SKSE::log::log_directory();
     if (!logsFolder) {
@@ -61,9 +64,13 @@ struct BSLightingShader_SetupMaterial
 
         // Populate extended slots
         for (uint32_t textureI = 0; textureI < 6; ++textureI) {
+            const uint32_t heightIndex = ParallaxStartIndex + textureI;
             if (materialBase.parallax[textureI] != nullptr && materialBase.parallax[textureI] != stateData.defaultTextureNormalMap) {
-                const uint32_t heightIndex = ParallaxStartIndex + textureI;
                 shadowState->SetPSTexture(heightIndex, materialBase.parallax[textureI]->rendererTexture);
+            }
+            else {
+                // set default texture
+                shadowState->SetPSTexture(heightIndex, nullptr);
             }
 
             // ENV MASK DISABLED FOR NOW
@@ -142,7 +149,9 @@ struct TESObjectLAND_SetupMaterial
                     txSet->SetTexture(static_cast<RE::BSTextureSet::Texture>(3), extendedSlots[hashKey].parallax[textureI]);
                     if (extendedSlots[hashKey].parallax[textureI] == stateData.defaultTextureNormalMap) {
                         // this file was not found
-                        spdlog::error("Unable to find parallax map {} while setting up material", txSet->GetTexturePath(static_cast<RE::BSTextureSet::Texture>(3)));
+                        if (get<1>(texturesErrorLogged.insert(txSet->GetTexturePath(static_cast<RE::BSTextureSet::Texture>(3))))) {
+                            spdlog::error("Unable to find parallax map {} while setting up material", txSet->GetTexturePath(static_cast<RE::BSTextureSet::Texture>(3)));
+                        }
                     }
                 }
 
