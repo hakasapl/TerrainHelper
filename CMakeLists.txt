@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.21)
 
 # Set project name and version
 set(PLUGIN_NAME TerrainHelper)
-set(PLUGIN_VERSION 0.3.2)
+set(PLUGIN_VERSION 0.3.3)
 project(${PLUGIN_NAME} VERSION ${PLUGIN_VERSION} LANGUAGES CXX)
 
 # Set compile defitions
@@ -10,16 +10,6 @@ add_compile_definitions(PLUGIN_NAME="${PLUGIN_NAME}")
 add_compile_definitions(PLUGIN_VERSION="${PLUGIN_VERSION}")
 
 include_directories("include")
-
-# Auto export to skyrim data folder if environment var is set
-if(DEFINED ENV{SKYRIM_FOLDER} AND IS_DIRECTORY "$ENV{SKYRIM_FOLDER}/Data")
-    set(OUTPUT_FOLDER "$ENV{SKYRIM_FOLDER}/Data")
-endif()
-
-# auto export to mods folder for MO2 if environment var is set
-if(DEFINED ENV{SKYRIM_MODS_FOLDER} AND IS_DIRECTORY "$ENV{SKYRIM_MODS_FOLDER}")
-    set(OUTPUT_FOLDER "$ENV{SKYRIM_MODS_FOLDER}/${PROJECT_NAME} ${CMAKE_BUILD_TYPE}")
-endif()
 
 # External Packages
 
