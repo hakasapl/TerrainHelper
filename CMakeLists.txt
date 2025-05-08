@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.21)
 
 # Set project name and version
 set(PLUGIN_NAME TerrainHelper)
-set(PLUGIN_VERSION 0.3.3)
+set(PLUGIN_VERSION 0.3.4)
 project(${PLUGIN_NAME} VERSION ${PLUGIN_VERSION} LANGUAGES CXX)
 
 # Set compile defitions
