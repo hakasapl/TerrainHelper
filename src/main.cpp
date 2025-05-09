@@ -36,13 +36,10 @@ void SetupLog() {
 }
 
 struct ExtendedSlots {
-	array<RE::NiSourceTexturePtr, 6> diffuse;
-	array<RE::NiSourceTexturePtr, 6> normal;
     array<RE::NiSourceTexturePtr, 6> parallax;
 };
 mutex extendedSlotsMutex;
 unordered_map<uint32_t, ExtendedSlots> extendedSlots;
-RE::BGSTextureSet* defaultLandTexture;
 
 struct BSLightingShader_SetupMaterial
 {
@@ -71,24 +68,10 @@ struct BSLightingShader_SetupMaterial
 
         const auto& stateData = RE::BSGraphics::State::GetSingleton()->GetRuntimeData();
 
-		static constexpr size_t DiffuseStartIndex = 0;  // 0-5
-		static constexpr size_t NormalStartIndex = 7;   // 7-12
         static constexpr size_t ParallaxStartIndex = 16;  // 16-21
-        static constexpr size_t EnvmaskStartIndex = 22;  // 22-27
 
         // Populate extended slots
         for (uint32_t textureI = 0; textureI < 6; ++textureI) {
-            // for diffuse and normal we mirror vanilla behavior which is to set but not unset if it doesn't exist
-			const uint32_t diffuseIndex = DiffuseStartIndex + textureI;
-			if (materialBase.diffuse[textureI] != nullptr && materialBase.diffuse[textureI] != stateData.defaultTextureNormalMap) {
-				shadowState->SetPSTexture(diffuseIndex, materialBase.diffuse[textureI]->rendererTexture);
-			}
-
-			const uint32_t normalIndex = NormalStartIndex + textureI;
-			if (materialBase.normal[textureI] != nullptr && materialBase.normal[textureI] != stateData.defaultTextureNormalMap) {
-				shadowState->SetPSTexture(normalIndex, materialBase.normal[textureI]->rendererTexture);
-			}
-
             const uint32_t heightIndex = ParallaxStartIndex + textureI;
             if (materialBase.parallax[textureI] != nullptr && materialBase.parallax[textureI] != stateData.defaultTextureNormalMap) {
                 shadowState->SetPSTexture(heightIndex, materialBase.parallax[textureI]->rendererTexture);
@@ -158,7 +141,7 @@ struct TESObjectLAND_SetupMaterial
             }
             else {
                 // this is a default texture
-                textureSets[0] = defaultLandTexture;
+                textureSets[0] = GetDefaultLandTexture()->textureSet;
             }
             for (uint32_t textureI = 0; textureI < 5; ++textureI) {
                 auto curTexture = land->loadedData->quadTextures[quadI][textureI];
@@ -169,7 +152,7 @@ struct TESObjectLAND_SetupMaterial
 
                 if (curTexture->formID == 0) {
                     // this is a default texture
-                    textureSets[textureI + 1] = defaultLandTexture;
+                    textureSets[textureI + 1] = GetDefaultLandTexture()->textureSet;
                 }
                 else {
                     textureSets[textureI + 1] = land->loadedData->quadTextures[quadI][textureI]->textureSet;
@@ -185,8 +168,6 @@ struct TESObjectLAND_SetupMaterial
                 auto txSet = textureSets[textureI];
                 if (txSet->GetTexturePath(static_cast<RE::BSTextureSet::Texture>(3)) != nullptr) {
 					const lock_guard<mutex> lock(extendedSlotsMutex);
-					txSet->SetTexture(static_cast<RE::BSTextureSet::Texture>(0), extendedSlots[hashKey].diffuse[textureI]);
-					txSet->SetTexture(static_cast<RE::BSTextureSet::Texture>(1), extendedSlots[hashKey].normal[textureI]);
                     txSet->SetTexture(static_cast<RE::BSTextureSet::Texture>(3), extendedSlots[hashKey].parallax[textureI]);
 
                     if (extendedSlots[hashKey].parallax[textureI] == RE::BSGraphics::State::GetSingleton()->GetRuntimeData().defaultTextureNormalMap) {
@@ -208,14 +189,14 @@ struct TESObjectLAND_SetupMaterial
 void onDataLoaded() {
     // Get the default landscape texture set for terrain helper
     const auto defaultLandTextureSet = RE::TESForm::LookupByEditorID<RE::BGSTextureSet>("LandscapeDefault");
+
     if (defaultLandTextureSet != nullptr) {
         spdlog::info("LandscapeDefault EDID texture set found");
-        defaultLandTexture = defaultLandTextureSet;
+        // set default texture set to this one
+		GetDefaultLandTexture()->textureSet = defaultLandTextureSet;
     }
     else {
         spdlog::info("LandscapeDefault EDID texture set not found, using default");
-        const auto bgsDefaultLandTex = *REL::Relocation<RE::TESLandTexture**>(RELOCATION_ID(514783, 400936));
-        defaultLandTexture = bgsDefaultLandTex->textureSet;
     }
 }
 
