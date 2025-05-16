@@ -16,6 +16,7 @@ private:
 	static std::unordered_map<uint32_t, ExtendedSlots> extendedSlots;
 
 	static std::unordered_set<std::string> texturesErrorLogged;
+	static RE::BGSTextureSet* defaultLandTexture;
 
 public:
 	static void TESObjectLAND_SetupMaterial(RE::TESObjectLAND* land);

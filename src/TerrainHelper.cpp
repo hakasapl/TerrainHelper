@@ -6,6 +6,7 @@ using namespace std;
 std::shared_mutex TerrainHelper::extendedSlotsMutex;
 std::unordered_map<uint32_t, TerrainHelper::ExtendedSlots> TerrainHelper::extendedSlots;
 std::unordered_set<std::string> TerrainHelper::texturesErrorLogged;
+RE::BGSTextureSet* TerrainHelper::defaultLandTexture = nullptr;
 
 void TerrainHelper::BSLightingShader_SetupMaterial(RE::BSLightingShader* shader, RE::BSLightingShaderMaterialBase const* material) {
     if (material == nullptr) {
@@ -76,7 +77,7 @@ void TerrainHelper::TESObjectLAND_SetupMaterial(RE::TESObjectLAND* land) {
         }
         else {
             // this is a default texture
-            textureSets[0] = GetDefaultLandTexture()->textureSet;
+            textureSets[0] = defaultLandTexture;
         }
         for (uint32_t textureI = 0; textureI < 5; ++textureI) {
             auto curTexture = land->loadedData->quadTextures[quadI][textureI];
@@ -87,7 +88,7 @@ void TerrainHelper::TESObjectLAND_SetupMaterial(RE::TESObjectLAND* land) {
 
             if (curTexture->formID == 0) {
                 // this is a default texture
-                textureSets[textureI + 1] = GetDefaultLandTexture()->textureSet;
+                textureSets[textureI + 1] = defaultLandTexture;
             }
             else {
                 textureSets[textureI + 1] = land->loadedData->quadTextures[quadI][textureI]->textureSet;
@@ -132,10 +133,18 @@ void TerrainHelper::onDataLoaded() {
     RE::BGSTextureSet* skyrimDefaultLandTexSet = nullptr;
     if (thDefaultLandTexSet != nullptr) {
         spdlog::info("LandscapeDefault EDID texture set found");
-        skyrimDefaultLand->textureSet = thDefaultLandTexSet;
+        defaultLandTexture = thDefaultLandTexSet;
+
+        if (skyrimDefaultLand != nullptr) {
+			spdlog::info("Replacing skyrim default texture set with LandscapeDefault");
+            skyrimDefaultLand->textureSet = thDefaultLandTexSet;
+        }
+        else {
+			spdlog::warn("Skyrim default texture set not found, diffuse and normal slots from LandscapeDefault record will not function");
+        }
     }
     else {
-        spdlog::info("LandscapeDefault EDID texture set not found, using default");
+        spdlog::warn("LandscapeDefault EDID texture set not found, extended slots will not work for default tiles");
     }
 }
 
