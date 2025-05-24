@@ -8,6 +8,7 @@ std::unordered_map<uint32_t, TerrainHelper::ExtendedSlots> TerrainHelper::extend
 std::unordered_set<std::string> TerrainHelper::texturesErrorLogged;
 RE::BGSTextureSet* TerrainHelper::defaultLandTexture = nullptr;
 bool TerrainHelper::enabled = false;
+bool TerrainHelper::defaultSetReplaced = false;
 
 void TerrainHelper::BSLightingShader_SetupMaterial(RE::BSLightingShader* shader, RE::BSLightingShaderMaterialBase const* material) {
     if (!enabled) {
@@ -137,7 +138,7 @@ void TerrainHelper::onDataLoaded() {
     const auto thDefaultLandTexSet = RE::TESForm::LookupByEditorID<RE::BGSTextureSet>("LandscapeDefault");
 
     // Get game default texture set
-    const auto skyrimDefaultLand = *REL::Relocation<RE::TESLandTexture**>(RELOCATION_ID(514783, 400936));;
+    static auto* skyrimDefaultLand = *REL::Relocation<RE::TESLandTexture**>(RELOCATION_ID(514783, 400936));
 
     RE::BGSTextureSet* skyrimDefaultLandTexSet = nullptr;
     if (thDefaultLandTexSet != nullptr) {
@@ -145,9 +146,10 @@ void TerrainHelper::onDataLoaded() {
         defaultLandTexture = thDefaultLandTexSet;
         enabled = true;
 
-        if (skyrimDefaultLand != nullptr) {
+        if (!defaultSetReplaced && skyrimDefaultLand != nullptr) {
 			spdlog::info("Replacing skyrim default texture set with LandscapeDefault");
             skyrimDefaultLand->textureSet = thDefaultLandTexSet;
+			defaultSetReplaced = true;
         }
         else {
 			spdlog::warn("Skyrim default texture set not found, diffuse and normal slots from LandscapeDefault record will not function");
