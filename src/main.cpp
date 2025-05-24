@@ -67,10 +67,20 @@ struct TESObjectLAND_SetupMaterial
     static inline REL::Relocation<decltype(thunk)> func;
 };
 
+struct SetPerFrameBuffers
+{
+    static void thunk(void* renderer)
+    {
+		func(renderer);
+        TerrainHelper::ReplaceDefaultLandscapeSet();
+    }
+    static inline REL::Relocation<decltype(thunk)> func;
+};
+
 void MessageHandler(SKSE::MessagingInterface::Message* a_msg) {
     switch (a_msg->type) {
     case SKSE::MessagingInterface::kDataLoaded:
-        TerrainHelper::onDataLoaded();
+        TerrainHelper::ReplaceDefaultLandscapeSet();
         break;
     }
 }
@@ -87,8 +97,10 @@ extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface* sks
     }
 
     // Hooks
+	spdlog::info("Hooking functions");
     stl::write_vfunc<0x4, BSLightingShader_SetupMaterial>(RE::VTABLE_BSLightingShader[0]);
     stl::detour_thunk<TESObjectLAND_SetupMaterial>(REL::RelocationID(18368, 18791));
+    stl::detour_thunk<SetPerFrameBuffers>(REL::RelocationID(75570, 77371));
 
     return true;
 }

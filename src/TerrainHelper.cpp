@@ -133,38 +133,34 @@ void TerrainHelper::TESObjectLAND_SetupMaterial(RE::TESObjectLAND* land) {
     }
 }
 
-void TerrainHelper::onDataLoaded() {
-    // Get the default landscape texture set for terrain helper
-    const auto thDefaultLandTexSet = RE::TESForm::LookupByEditorID<RE::BGSTextureSet>("LandscapeDefault");
+void TerrainHelper::ReplaceDefaultLandscapeSet() {
+    if (defaultLandTexture == nullptr) {
+        // Get the default landscape texture set for terrain helper
+        const auto thDefaultLandTexSet = RE::TESForm::LookupByEditorID<RE::BGSTextureSet>("LandscapeDefault");
+        if (thDefaultLandTexSet == nullptr) {
+            // default set not found so we are done
+            return;
+        } else {
+            spdlog::info("LandscapeDefault EDID texture set found");
+            defaultLandTexture = thDefaultLandTexSet;
+            enabled = true;
+		}
+    }
+
+    if (defaultLandTexture == nullptr || defaultSetReplaced) {
+        // cannot continue to setting default because TH default set not set
+		// or skyrim default set already replaced
+        return;
+    }
 
     // Get game default texture set
     static auto* skyrimDefaultLand = *REL::Relocation<RE::TESLandTexture**>(RELOCATION_ID(514783, 400936));
-
-    RE::BGSTextureSet* skyrimDefaultLandTexSet = nullptr;
-    if (thDefaultLandTexSet != nullptr) {
-        spdlog::info("LandscapeDefault EDID texture set found");
-        defaultLandTexture = thDefaultLandTexSet;
-        enabled = true;
-
-        if (!defaultSetReplaced && skyrimDefaultLand != nullptr) {
-			spdlog::info("Replacing skyrim default texture set with LandscapeDefault");
-            skyrimDefaultLand->textureSet = thDefaultLandTexSet;
-			defaultSetReplaced = true;
-        }
-        else {
-			spdlog::warn("Skyrim default texture set not found, diffuse and normal slots from LandscapeDefault record will not function");
-        }
+    if (skyrimDefaultLand == nullptr) {
+		// Cannot find skyrim default texture set (yet)
+        return;
     }
-    else {
-        spdlog::warn("LandscapeDefault EDID texture set not found, extended slots will not work for default tiles");
 
-        if (skyrimDefaultLand != nullptr) {
-            defaultLandTexture = skyrimDefaultLand->textureSet;
-            enabled = true;
-        }
-        else {
-            spdlog::critical("Both skyrim default texture set and LandscapeDefault record are not found, Terrain Helper cannot continue");
-            enabled = false;
-        }
-    }
+    spdlog::info("Replacing skyrim default texture set with LandscapeDefault");
+    skyrimDefaultLand->textureSet = defaultLandTexture;
+    defaultSetReplaced = true;
 }
