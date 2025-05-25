@@ -20,7 +20,7 @@ void TerrainHelper::BSLightingShader_SetupMaterial(RE::BSLightingShader* shader,
         return;
     }
 
-    if (RE::UI::GetSingleton()->IsMenuOpen("MapMenu")) {
+    if (RE::UI::GetSingleton()->IsMenuOpen(RE::MapMenu::MENU_NAME)) {
 		// skip if map menu is open (avoids local map crash)
 		return;
     }
