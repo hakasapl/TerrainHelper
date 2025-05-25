@@ -20,6 +20,11 @@ void TerrainHelper::BSLightingShader_SetupMaterial(RE::BSLightingShader* shader,
         return;
     }
 
+    if (RE::UI::GetSingleton()->IsMenuOpen("MapMenu")) {
+		// skip if map menu is open (avoids local map crash)
+		return;
+    }
+
     ExtendedSlots materialBase;
     {
         const shared_lock lock(extendedSlotsMutex);
