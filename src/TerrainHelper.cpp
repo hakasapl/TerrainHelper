@@ -159,13 +159,10 @@ void TerrainHelper::ReplaceDefaultLandscapeSet() {
     }
 
     // Get game default texture set
-    static auto* skyrimDefaultLand = *REL::Relocation<RE::TESLandTexture**>(RELOCATION_ID(514783, 400936));
-    if (skyrimDefaultLand == nullptr) {
-		// Cannot find skyrim default texture set (yet)
-        return;
+    static const auto defaultLandTextureAddress = REL::Relocation<RE::TESLandTexture**>(RELOCATION_ID(514783, 400936));
+    if (auto* skyrimDefaultLand = *defaultLandTextureAddress) {
+        spdlog::info("Replacing skyrim default texture set with LandscapeDefault");
+        skyrimDefaultLand->textureSet = defaultLandTexture;
+        defaultSetReplaced = true;
     }
-
-    spdlog::info("Replacing skyrim default texture set with LandscapeDefault");
-    skyrimDefaultLand->textureSet = defaultLandTexture;
-    defaultSetReplaced = true;
 }
