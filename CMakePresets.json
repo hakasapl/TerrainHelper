@@ -101,10 +101,10 @@
             "generator": "Ninja",
             "binaryDir": "${sourceDir}/build/release-msvc",
             "cacheVariables": {
-                "CMAKE_BUILD_TYPE": {
-                    "type": "STRING",
-                    "value": "Release"
-                }
+              "CMAKE_BUILD_TYPE": {
+                "type": "STRING",
+                "value": "RelWithDebInfo"
+              }
             }
         }
     ],
