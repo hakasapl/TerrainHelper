@@ -35,6 +35,7 @@ jobs:
       run: |
         New-Item -ItemType Directory -Path "artifacts/SKSE/Plugins" -Force
         Copy-Item -Recurse -Force build/release-msvc/TerrainHelper.dll artifacts/SKSE/Plugins/
+        Copy-Item -Recurse -Force build/release-msvc/TerrainHelper.pdb artifacts/SKSE/Plugins/
         Copy-Item -Force plugins/TerrainHelper.esp artifacts/
 
     - name: Upload Build Artifacts
