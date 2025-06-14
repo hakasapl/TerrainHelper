@@ -21,6 +21,8 @@ private:
 	static bool enabled;
 	static bool defaultSetReplaced;
 
+	[[nodiscard]] static RE::BGSTextureSet* GetSeasonalSwap(RE::BGSTextureSet* textureSet);
+
 public:
 	static void TESObjectLAND_SetupMaterial(RE::TESObjectLAND* land);
 	static void BSLightingShader_SetupMaterial(RE::BSLightingShader* shader, RE::BSLightingShaderMaterialBase const* material);

@@ -10,6 +10,21 @@ RE::BGSTextureSet* TerrainHelper::defaultLandTexture = nullptr;
 bool TerrainHelper::enabled = false;
 bool TerrainHelper::defaultSetReplaced = false;
 
+RE::BGSTextureSet* TerrainHelper::GetSeasonalSwap(RE::BGSTextureSet* textureSet)
+{
+    if (textureSet == nullptr) {
+        return nullptr;
+    }
+
+    if (textureSet->pad12C > 0) {
+        if (auto* form = RE::TESForm::LookupByID<RE::BGSTextureSet>(textureSet->pad12C)) {
+            return form;
+        }
+    }
+
+    return textureSet;
+}
+
 void TerrainHelper::BSLightingShader_SetupMaterial(RE::BSLightingShader* shader, RE::BSLightingShaderMaterialBase const* material) {
     if (!enabled) {
         return;
@@ -88,11 +103,11 @@ void TerrainHelper::TESObjectLAND_SetupMaterial(RE::TESObjectLAND* land) {
         std::array<RE::BGSTextureSet*, 6> textureSets;
         auto defTexture = land->loadedData->defQuadTextures[quadI];
         if (defTexture != nullptr && defTexture->formID != 0) {
-            textureSets[0] = defTexture->textureSet;
+            textureSets[0] = GetSeasonalSwap(defTexture->textureSet);
         }
         else {
             // this is a default texture
-            textureSets[0] = defaultLandTexture;
+            textureSets[0] = GetSeasonalSwap(defaultLandTexture);
         }
         for (uint32_t textureI = 0; textureI < 5; ++textureI) {
             auto curTexture = land->loadedData->quadTextures[quadI][textureI];
@@ -103,10 +118,10 @@ void TerrainHelper::TESObjectLAND_SetupMaterial(RE::TESObjectLAND* land) {
 
             if (curTexture->formID == 0) {
                 // this is a default texture
-                textureSets[textureI + 1] = defaultLandTexture;
+                textureSets[textureI + 1] = GetSeasonalSwap(defaultLandTexture);
             }
             else {
-                textureSets[textureI + 1] = land->loadedData->quadTextures[quadI][textureI]->textureSet;
+                textureSets[textureI + 1] = GetSeasonalSwap(land->loadedData->quadTextures[quadI][textureI]->textureSet);
             }
         }
 
