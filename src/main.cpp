@@ -19,6 +19,8 @@
 
 #include "TerrainHelper.h"
 
+#include "THUtil.h"
+
 #define DLLEXPORT __declspec(dllexport)
 
 using namespace std;
@@ -88,6 +90,13 @@ void MessageHandler(SKSE::MessagingInterface::Message* a_msg) {
 extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface* skse) {
     SKSE::Init(skse);
     SetupLog();
+
+    if (!THUtil::IsENBLoaded()) {
+        // Do not load the plugin if ENB is not loaded
+        spdlog::critical("ENB is not loaded, TerrainHelper for ENB is disabled. If you use Community Shaders this message is okay.");
+        return true;
+    }
+
     spdlog::info("{} version {} loaded", PLUGIN_NAME, PLUGIN_VERSION);
 
     // Register messaging interface

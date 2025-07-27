@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.21)
 
 # Set project name and version
 set(PLUGIN_NAME TerrainHelper)
-set(PLUGIN_VERSION 0.4.0)
+set(PLUGIN_VERSION 1.0.0)
 project(${PLUGIN_NAME} VERSION ${PLUGIN_VERSION} LANGUAGES CXX)
 
 # Set compile defitions
@@ -27,6 +27,7 @@ include_directories("extern/detours")
 set(headers
     "include/TerrainHelper.h"
 	"include/PCH.h"
+    "include/THUtil.h"
 )
 
 set(sources
